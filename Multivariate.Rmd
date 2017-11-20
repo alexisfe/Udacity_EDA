@@ -1,0 +1,97 @@
+---
+title: "Multivariate"
+output: html_document
+---
+
+Import necessary libraries and data sets
+```{r, echo=FALSE}
+library(ggplot2)
+library(gridExtra)
+library(dplyr) 
+library(tidyr)
+library(reshape2)
+```
+
+Load pseudo facebook data set
+```{r}
+pf_data_link <- "https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv"
+pseudo_facebook <- read.csv(file=pf_data_link, sep="\t")
+```
+
+New dataframe arranged by age and gender
+```{r}
+pf.fc_by_age_gender <- pseudo_facebook %>%
+  subset(!is.na(gender)) %>%
+  group_by(age, gender) %>% 
+  summarise(mean_friend_count = mean(friend_count)
+            , median_friend_count = median(friend_count)
+            , n = n()) %>%
+  arrange(age, gender)
+```
+
+Line plot of median friend count by age split by gender
+```{r}
+ggplot(data = pf.fc_by_age_gender, aes(x = age, y = median_friend_count, color = gender)) + geom_line()
+```
+
+It can be observed that females have a greater friend count until ~65 year of age
+
+Line plot of female over male ratio of median friend count 
+```{r}
+pf.fc_by_age_gender.wide <- dcast(pf.fc_by_age_gender, 
+                                  age ~ gender,
+                                  value.var = "median_friend_count")
+ggplot(data = pf.fc_by_age_gender.wide, aes(x = age, y = (female/male))) + 
+  geom_line() +
+  geom_hline(yintercept = 1, alpha = 0.3, linetype = 2)
+```
+It can be observed that females have up to 2.5 times more friend than males in younger ages.
+
+```{r}
+pseudo_facebook$years_joined <- floor(2014 - (pseudo_facebook$tenure/365))
+pseudo_facebook$years_joined.bucket <- cut(pseudo_facebook$years_joined, c(2004, 2009, 2011, 2012, 2014))
+```
+
+Line plot of mean friend count by age split by gender (Including grand mean)
+```{r}
+ggplot(aes(x = age, y = friend_count), 
+              data = subset(pseudo_facebook, !is.na(gender) & !is.na(years_joined.bucket))) + 
+  geom_line(aes(color = years_joined.bucket), stat = 'summary', fun.y = mean) +
+  geom_line(stat = 'summary', fun.y = mean, linetype = 2)
+```
+
+Summary of the friend count per tenure days 
+```{r}
+with(subset(pseudo_facebook, tenure >= 1), summary(friend_count/tenure))
+```
+
+Line plot of mean friendships initiated by tenure coloured by year joined groups
+```{r}
+ggplot(data=subset(pseudo_facebook, tenure >= 1), aes(x=tenure, y=friendships_initiated/tenure)) +
+  geom_line(aes(color=years_joined.bucket), stat='summary', fun.y=mean)
+```
+
+Smoothened line plot of mean friendships initiated by tenure coloured by year joined groups
+```{r}
+ggplot(aes(x = 7 * round(tenure / 7), y = friendships_initiated / tenure),
+       data = subset(pseudo_facebook, tenure > 0)) +
+  geom_smooth(aes(color = years_joined.bucket))
+```
+
+Explore yogurt dataset
+```{r}
+yo <- read.csv("input/yogurt.csv")
+yo$id <- as.factor(yo$id) 
+head(yo)
+summary(yo)
+ggplot(data=yo, aes(x=price)) + geom_histogram()
+```
+Create a total purchases variable per household
+```{r}
+yo <- transform(yo, all.purchases=strawberry+blueberry+pina.colada+plain+mixed.berry)
+```
+
+```{r}
+ggplot(data=yo, aes(x=time, y=price)) + geom_point() + geom_jitter(alpha=1/4, shape=21)
+```
+

@@ -1,0 +1,134 @@
+---
+title: "One Variable"
+output: html_document
+---
+
+Import necessary libraries
+```{r}
+library("ggplot2")
+library(gridExtra)
+```
+
+Load pseudo facebook data set
+```{r}
+pf_data_link <- "https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv"
+pseudo_facebook <- read.csv(file=pf_data_link, sep="\t")
+```
+
+Visualize data set structure and sample
+```{r, echo=FALSE}
+str(pseudo_facebook)
+head(pseudo_facebook)
+```
+
+Friend counts histogram faceted by gender
+```{r, echo=FALSE}
+qplot(x = friend_count, data = subset(pseudo_facebook, !is.na(gender)), binwidth = 25
+      , color = I('black'), fill = I('blue')) +
+  xlab("Number of friends") +
+  ylab("Number of users") +
+  scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 100)) +
+  facet_wrap(~gender)
+```
+
+Friend count statistics by gender
+```{r}
+by(pseudo_facebook$friend_count, pseudo_facebook$gender, summary)
+```
+
+Tenure histogram in years
+```{r, echo=FALSE}
+qplot(x = (tenure/365), data = pseudo_facebook, binwidth = .25 
+      , color = I('black'), fill = I('blue')) +
+  xlab("Number of years using facebook") +
+  ylab("Number of users") +
+  scale_x_continuous(breaks = seq(1, 7, 1), limits = c(0, 7))
+```
+
+User's age histogram
+```{r, echo=FALSE}
+qplot(x=age, data=pseudo_facebook, binwidth=1
+      , color = I('black'), fill = I('blue')) +
+  xlab("User's age") +
+  ylab("Number of users") +
+  scale_x_continuous(breaks=seq(0, 150, 5)) +
+  scale_y_continuous(breaks=seq(0, 6000, 500))
+```
+
+Three different friend's count histograms: 1) Count, 2) Base 10 log transformation of count, and 3) Square root transformation of count 
+```{r, echo=FALSE}
+fc <- qplot(x = friend_count, data = pseudo_facebook, binwidth=25
+            , color = I('black'), fill = I('blue')) +
+  xlab('Number of friends') +
+  ylab('Number of users') +
+  scale_x_continuous(breaks=seq(0, 5000, 100), limits=c(0, 2500))
+
+fc_log10 <- qplot(x = friend_count+1, data = pseudo_facebook, binwidth=.05
+                  , color = I('black'), fill = I('blue')) +
+  xlab('Number of friends (Base 10 logarithm transformation)') +
+  ylab('Number of users') +
+  scale_x_log10(breaks=seq(0, 2500, 300), limits=c(1, 2500))
+
+fc_sqrt <- qplot(x = friend_count, data = pseudo_facebook, binwidth=.75
+                  , color = I('black'), fill = I('blue')) +
+  xlab('Number of friends (Square root transformation)') +
+  ylab('Number of users') +
+  scale_x_sqrt(breaks=seq(0, 5000, 100), limits=c(0, 2500))
+
+grid.arrange(fc, fc_log10, fc_sqrt, nrow = 3)
+```
+
+Frequency polygons of number of likes by gender
+```{r, echo=FALSE}
+qplot(x = www_likes, y = ..count../sum(..count..), data = subset(pseudo_facebook, !is.na(gender))
+      , geom = 'freqpoly', color = gender
+      , xlab = 'Likes Count'
+      , ylab = 'Number of Friends') + 
+  scale_x_log10(breaks=seq(0,15000,1000), limits=c(1, 15000))
+```
+
+What's the males like count and who has more likes, males or females?
+```{r, echo=FALSE}
+by(pseudo_facebook$www_likes, pseudo_facebook$gender, sum)
+```
+
+Who has more friends, males or females?
+Boxplot of friend count by gender
+```{r, echo=FALSE}
+qplot(x = gender, y = friend_count,data = subset(pseudo_facebook, !is.na(gender))
+      , geom = 'boxplot') +
+  coord_cartesian(ylim=c(0, 1000))
+```
+Numerical summary of friend count by gender
+```{r, echo=FALSE}
+by(pseudo_facebook$friend_count, pseudo_facebook$gender, summary)
+```
+
+Who initiated more friendships, males or females?
+Boxplot of friendships initiated by gender
+```{r, echo=FALSE}
+qplot(x = gender, y = friendships_initiated
+      , data = subset(pseudo_facebook, !is.na(gender))
+      , geom = 'boxplot') +
+  coord_cartesian(ylim = c(0:150))
+```
+Numerical summary of friendships initiated by gender
+```{r, echo=FALSE}
+by(pseudo_facebook$friendships_initiated, pseudo_facebook$gender, summary)
+```
+
+Create new logical variable to identify if an user has ever logged in using a mobile device
+```{r}
+pseudo_facebook$mobile_check_in <- ifelse(pseudo_facebook$mobile_likes > 0, 1, 0)
+pseudo_facebook$mobile_check_in <- factor(pseudo_facebook$mobile_check_in)
+summary(pseudo_facebook$mobile_check_in)
+```
+What percentage of users check in using mobile?
+```{r, echo=FALSE}
+sum(pseudo_facebook$mobile_check_in == 1)/length(pseudo_facebook$mobile_check_in)
+```
+  
+
+
+
+
