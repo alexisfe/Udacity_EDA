@@ -10,6 +10,7 @@ library(gridExtra)
 library(dplyr) 
 library(tidyr)
 library(reshape2)
+library(GGally)
 
 set.seed(1234)
 ```
@@ -115,8 +116,7 @@ ggplot(data=subset(yo, id %in% sample.ids),
 ```
 
 ```{r}
-library(GGally)
-theme_set(theme_minimal(20))
+theme_set(theme_grey(base_size=5))
 pf_subset = pseudo_facebook[, c('age', 'dob_year', 'dob_month', 'gender', 'tenure')]
 ggpairs(pf_subset[sample.int(nrow(pf_subset), 1000), ], axisLabels = "internal")
 ```
