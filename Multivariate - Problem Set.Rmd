@@ -23,6 +23,30 @@ ggplot(data=diamonds, aes(x=table, y=price, color=cut)) + geom_point()
 Create a scatterplot of diamond price vs. volume (x * y * z) and color the points by the clarity of diamonds. 
 Use scale on the y-axis to take the log10 of price. You should also omit the top 1% of diamond volumes from the plot.
 ```{r}
-ggplot(data=diamonds, aes(x=x*y*z, y=price, color=clarity)) + scale_y_log10()
+diamonds$volume <- (diamonds$x*diamonds$y*diamonds$z)
+
+ggplot(data=subset(diamonds, diamonds$volume < quantile(diamonds$volume, 0.99))
+       , aes(x=volume, y=price, color=clarity)) + geom_point() + scale_y_log10()
+```
+
+Create a new variable called 'prop_initiated' in the Pseudo-Facebook data set. The variable should contain the proportion of friendships that the user initiated.
+```{r}
+pseudo_facebook$prop_initiated <- pseudo_facebook$friendships_initiated/pseudo_facebook$friend_count
+```
+
+Create a line graph of the median proportion of friendships initiated ('prop_initiated') vs. tenure and color the line segment by year_joined.bucket.
+```{r}
+ggplot(data=pseudo_facebook, aes(x=tenure, y=prop_initiated)) + 
+    geom_line(aes(color = years_joined.bucket), stat = 'summary', fun.y = median)
+```
+
+# Smooth the last plot you created of of prop_initiated vs tenure colored by year_joined.bucket. You can bin together ranges of tenure or add a smoother to the plot.
+```{r}
+ggplot(data=pseudo_facebook, aes(x=tenure, y=prop_initiated)) + 
+    geom_smooth(aes(color = years_joined.bucket))
+```
+# Create a scatter plot of the price/carat ratio of diamonds. The variable x should be assigned to cut. The points should be colored by diamond color, and the plot should be faceted by clarity.
+```{r}
+ggplot(data=diamonds, aes(x=cut, y=price/carat, color=color)) + geom_point() + facet_wrap(~clarity)
 ```
 
