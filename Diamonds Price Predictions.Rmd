@@ -1,0 +1,29 @@
+---
+title: "Diamonds Price Predictions"
+output: html_document
+---
+
+Import libraries
+```{r}
+library(ggplot2)
+```
+
+
+```{r}
+ggplot(data=diamonds, aes(x=carat, y=price)) + geom_point() +
+  coord_cartesian(xlim=c(0, quantile(diamonds$carat, 0.99)), ylim=c(0, quantile(diamonds$price, 0.99)))
+```
+
+```{r}
+
+library(gridExtra)
+
+plot1 <- ggplot(data=diamonds, aes(x=price)) + geom_histogram()
+  ggtitle('Price')
+
+plot2 <- ggplot(data=diamonds, aes(x=price)) + geom_histogram() + scale_x_log10()
+  ggtitle('Price (log10)')
+
+grid.arrange(plot1, plot2)
+```
+
