@@ -6,6 +6,8 @@ output: html_document
 Import libraries
 ```{r}
 library(ggplot2)
+library(gridExtra)
+library(scales)
 ```
 
 
@@ -15,9 +17,6 @@ ggplot(data=diamonds, aes(x=carat, y=price)) + geom_point() +
 ```
 
 ```{r}
-
-library(gridExtra)
-
 plot1 <- ggplot(data=diamonds, aes(x=price)) + geom_histogram()
   ggtitle('Price')
 
