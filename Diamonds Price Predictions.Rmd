@@ -8,14 +8,16 @@ Import libraries
 library(ggplot2)
 library(gridExtra)
 library(scales)
+library(RColorBrewer)
 ```
 
-
+Relationship between diamond carat and price
 ```{r}
 ggplot(data=diamonds, aes(x=carat, y=price)) + geom_point() +
   coord_cartesian(xlim=c(0, quantile(diamonds$carat, 0.99)), ylim=c(0, quantile(diamonds$price, 0.99)))
 ```
 
+Diamond price histograms
 ```{r}
 plot1 <- ggplot(data=diamonds, aes(x=price)) + geom_histogram()
   ggtitle('Price')
@@ -42,4 +44,55 @@ ggplot(aes(carat, price), data = diamonds) +
   ggtitle('Price (log10) by Cube-Root of Carat')
 ```
 
+Add a layer to adjust the features of the scatterplot. Set the transparency to one half, the size to three-fourths, and jitter the points.
+```{r}
+ggplot(aes(carat, price), data = diamonds) + 
+  geom_point(alpha=0.5, size=0.75, position='jitter') + 
+  scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
+                     breaks = c(0.2, 0.5, 1, 2, 3)) + 
+  scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
+                     breaks = c(350, 1000, 5000, 10000, 15000)) +
+  ggtitle('Price (log10) by Cube-Root of Carat')
+```
+
+Relationship between carat and price - Clarity variable has explanatory power on the linear relationship variance
+```{r}
+ggplot(aes(x = carat, y = price, color = clarity), data = diamonds) + 
+  geom_point(alpha = 0.5, size = 1, position = 'jitter') +
+  scale_color_brewer(type = 'div',
+    guide = guide_legend(title = 'Clarity', reverse = T,
+    override.aes = list(alpha = 1, size = 2))) +  
+  scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
+    breaks = c(0.2, 0.5, 1, 2, 3)) + 
+  scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
+    breaks = c(350, 1000, 5000, 10000, 15000)) +
+  ggtitle('Price (log10) by Cube-Root of Carat and Clarity')
+```
+
+Relationship between carat and price - Cut variable does not have much explanatory power on the linear relationship variance
+```{r}
+ggplot(aes(x = carat, y = price, color = cut), data = diamonds) + 
+  geom_point(alpha = 0.5, size = 1, position = 'jitter') +
+  scale_color_brewer(type = 'div',
+                     guide = guide_legend(title = 'Cut', reverse = T,
+                                          override.aes = list(alpha = 1, size = 2))) +  
+  scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
+                     breaks = c(0.2, 0.5, 1, 2, 3)) + 
+  scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
+                     breaks = c(350, 1000, 5000, 10000, 15000)) +
+  ggtitle('Price (log10) by Cube-Root of Carat and Cut')
+```
+Relationship between carat and price - Color variable has explanatory power on the linear relationship variance
+```{r}
+ggplot(aes(x = carat, y = price, color = color), data = diamonds) + 
+  geom_point(alpha = 0.5, size = 1, position = 'jitter') +
+  scale_color_brewer(type = 'div',
+                     guide = guide_legend(title = 'Color', reverse = F,
+                                          override.aes = list(alpha = 1, size = 2))) +  
+  scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
+                     breaks = c(0.2, 0.5, 1, 2, 3)) + 
+  scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
+                     breaks = c(350, 1000, 5000, 10000, 15000)) +
+  ggtitle('Price (log10) by Cube-Root of Carat and Color')
+```
 
