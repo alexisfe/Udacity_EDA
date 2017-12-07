@@ -124,3 +124,21 @@ m5 <- update(m4, ~ . + clarity)
 mtable(m1, m2, m3, m4, m5)
 ```
 
+```{r}
+dat = data.frame(m4$model, m4$residuals)
+
+with(dat, sd(m4.residuals))
+
+with(subset(dat, carat > .9 & carat < 1.1), sd(m4.residuals))
+
+dat$resid <- as.numeric(dat$m4.residuals)
+ggplot(aes(y = resid, x = round(carat, 2)), data = dat) +
+  geom_line(stat = "summary", fun.y = sd)
+```
+
+```{r}
+thisDiamond = data.frame(carat = 1.00, cut = "V.Good", color = "I", clarity = "VS1")
+modelEstimate = predict(m5, newdata = thisDiamond, interval = "prediction", level = 0.95)
+exp(modelEstimate)
+```
+
