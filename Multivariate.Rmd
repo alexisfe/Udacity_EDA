@@ -1,24 +1,33 @@
 ---
 title: "Multivariate"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 Import necessary libraries and data sets
-```{r, echo=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(ggplot2)
 library(gridExtra)
 library(dplyr) 
 library(tidyr)
 library(reshape2)
 library(GGally)
+```
 
+Setting seed for reproducibility
+```{r}
 set.seed(1234)
 ```
 
 Load pseudo facebook data set
 ```{r}
-pf_data_link <- "https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv"
-pseudo_facebook <- read.csv(file=pf_data_link, sep="\t")
+destfile <- "input/pseudo_facebook.tsv"
+
+if(!file.exists(destfile)){
+  download.file("https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv",destfile=destfile,method="libcurl")
+}
+pseudo_facebook <- read.csv(file=destfile, sep="\t")
 ```
 
 New dataframe arranged by age and gender
@@ -32,14 +41,13 @@ pf.fc_by_age_gender <- pseudo_facebook %>%
   arrange(age, gender)
 ```
 
-Line plot of median friend count by age split by gender
+Line plot of median friend count by age split by gender - Females have a greater friend count until ~65 year of age
 ```{r}
 ggplot(data = pf.fc_by_age_gender, aes(x = age, y = median_friend_count, color = gender)) + geom_line()
 ```
 
-It can be observed that females have a greater friend count until ~65 year of age
+Line plot of female over male ratio of median friend count - Females have up to 2.5 times more friend than males in younger ages.
 
-Line plot of female over male ratio of median friend count 
 ```{r}
 pf.fc_by_age_gender.wide <- dcast(pf.fc_by_age_gender, 
                                   age ~ gender,
@@ -48,7 +56,6 @@ ggplot(data = pf.fc_by_age_gender.wide, aes(x = age, y = (female/male))) +
   geom_line() +
   geom_hline(yintercept = 1, alpha = 0.3, linetype = 2)
 ```
-It can be observed that females have up to 2.5 times more friend than males in younger ages.
 
 ```{r}
 pseudo_facebook$years_joined <- floor(2014 - (pseudo_facebook$tenure/365))
@@ -75,27 +82,28 @@ ggplot(data=subset(pseudo_facebook, tenure >= 1), aes(x=tenure, y=friendships_in
 ```
 
 Smoothened line plot of mean friendships initiated by tenure coloured by year joined groups
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggplot(aes(x = 7 * round(tenure / 7), y = friendships_initiated / tenure),
        data = subset(pseudo_facebook, tenure > 0)) +
   geom_smooth(aes(color = years_joined.bucket))
 ```
 
 Explore yogurt dataset
-```{r}
+```{r message=FALSE, warning=FALSE}
 yo <- read.csv("input/yogurt.csv")
 yo$id <- as.factor(yo$id) 
 head(yo)
 summary(yo)
 ggplot(data=yo, aes(x=price)) + geom_histogram()
 ```
+
 Create a total purchases variable per household
 ```{r}
 yo <- transform(yo, all.purchases=strawberry+blueberry+pina.colada+plain+mixed.berry)
 ```
 
 Distribution of total purchases
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggplot(data=yo, aes(x=all.purchases)) + geom_histogram()
 ```
 
@@ -104,7 +112,6 @@ ggplot(data=yo, aes(x=time, y=price)) + geom_point() + geom_jitter(alpha=1/4, sh
 ```
 
 ```{r}
-
 sample.ids <- sample(levels(yo$id), 16)
 
 ggplot(data=subset(yo, id %in% sample.ids), 
@@ -112,10 +119,9 @@ ggplot(data=subset(yo, id %in% sample.ids),
   geom_line() +
   geom_point(aes(size=all.purchases), pch=1) +
   facet_wrap(~id)
-  
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 theme_set(theme_grey(base_size=5))
 pf_subset = pseudo_facebook[, c('age', 'dob_year', 'dob_month', 'gender', 'tenure')]
 ggpairs(pf_subset[sample.int(nrow(pf_subset), 1000), ], axisLabels = "internal")

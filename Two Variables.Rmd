@@ -1,24 +1,36 @@
 ---
 title: "Two Variables"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 Import necessary libraries
-```{r, echo=FALSE}
+```{r message=FALSE, warning=FALSE}
+library(RCurl)
 library(ggplot2)
 library(gridExtra)
 library(dplyr) 
 library(tidyr)
 ```
 
+Setting seed for reproducibility
+```{r}
+set.seed(1234)
+```
+
 Load pseudo facebook data set
 ```{r}
-pf_data_link <- "https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv"
-pseudo_facebook <- read.csv(file=pf_data_link, sep="\t")
+destfile <- "input/pseudo_facebook.tsv"
+
+if(!file.exists(destfile)){
+  download.file("https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv",destfile=destfile,method="libcurl")
+}
+pseudo_facebook <- read.csv(file=destfile, sep="\t")
 ```
 
 Relationship between age and friend count
-```{r}
+```{r message=FALSE, warning=FALSE}
 p1 <- ggplot(aes(x=age, y=friend_count), data=pseudo_facebook) + 
   geom_jitter(alpha=1/20, position = position_jitter(h = 0)) + 
   xlim(13, 90) +
@@ -26,19 +38,19 @@ p1 <- ggplot(aes(x=age, y=friend_count), data=pseudo_facebook) +
 ```
 
 Relationship between age and friendship initiatied
-```{r}
+```{r message=FALSE, warning=FALSE}
 p2 <- ggplot(aes(x=age, y=friendships_initiated), data=pseudo_facebook) + 
   geom_jitter(alpha=1/20, position = position_jitter(h = 0)) + 
   xlim(13, 90) +
   coord_trans(y="sqrt")
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 grid.arrange(p1, p2, nrow=2)
 ```
 
 Calculate mean/median/count statistics for each age
-```{r}
+```{r message=FALSE, warning=FALSE}
 pf.fc_by_age <- pseudo_facebook %>%
   group_by(age) %>% 
   summarise(friend_count_mean = mean(friend_count)
@@ -49,8 +61,7 @@ pf.fc_by_age <- pseudo_facebook %>%
 pf.fc_by_age2 <- gather(pf.fc_by_age, "statistic", "friend_count", friend_count_mean:friend_count_median)
 ```
 
-
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggplot(aes(x=age, y=friend_count, color=statistic), data=pf.fc_by_age2) + 
   xlab("Age") +
   ylab("Friend Count") +
@@ -65,7 +76,7 @@ Observations from the above plot are:
 * Strong spike at the age of 69.
 * High variability in friend count starting at the age of 80.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggplot(aes(x=age, y=friend_count), data=pseudo_facebook) +
   xlab("Age") +
   ylab("Friend Count") +
@@ -81,7 +92,7 @@ ggplot(aes(x=age, y=friend_count), data=pseudo_facebook) +
 ```
 
 Explore the relationship between web likes (www_likes_received) and total likes (likes_received)
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggplot(data=pseudo_facebook, aes(x=www_likes_received, y=likes_received)) + 
   geom_point() +
   xlim(0, quantile(pseudo_facebook$www_likes_received, 0.95)) +
@@ -100,7 +111,7 @@ pseudo_facebook$age_with_months <- pseudo_facebook$age + (1-pseudo_facebook$dob_
 ```
 
 Calculate mean/median/count statistics for age with months
-```{r}
+```{r message=FALSE, warning=FALSE}
 pf.fc_by_age_months <- pseudo_facebook %>%
   group_by(age_with_months) %>% 
   summarise(friend_count_mean = mean(friend_count)
@@ -110,12 +121,12 @@ pf.fc_by_age_months <- pseudo_facebook %>%
 ```
 
 Plot mean by age with months
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggplot(data = subset(pf.fc_by_age_months, age_with_months < 71), aes(x = age_with_months, y = friend_count_mean)) + geom_line()
 ```
 
 Smoothing conditional means
-```{r}
+```{r message=FALSE, warning=FALSE}
 p1 <- ggplot(data = subset(pf.fc_by_age_months, age_with_months < 71), aes(x = age_with_months, y = friend_count_mean)) + 
   geom_line() + 
   geom_smooth(method = 'loess')

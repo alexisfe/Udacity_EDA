@@ -8,18 +8,33 @@ output:
 Import necessary libraries
 
 ```r
-library("ggplot2")
+library(RCurl)
+library(ggplot2)
 library(gridExtra)
+```
+
+Setting seed for reproducibility
+
+```r
+set.seed(1234)
 ```
 
 Load pseudo facebook data set
 
 ```r
-pf_data_link <- "https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv"
-pseudo_facebook <- read.csv(file=pf_data_link, sep="\t")
+destfile <- "input/pseudo_facebook.tsv"
+
+if(!file.exists(destfile)){
+  download.file("https://s3.amazonaws.com/udacity-hosted-downloads/ud651/pseudo_facebook.tsv",destfile=destfile,method="libcurl")
+}
+pseudo_facebook <- read.csv(file=destfile, sep="\t")
 ```
 
 Visualize data set structure and sample
+
+```r
+str(pseudo_facebook)
+```
 
 ```
 ## 'data.frame':	99003 obs. of  15 variables:
@@ -38,6 +53,10 @@ Visualize data set structure and sample
 ##  $ mobile_likes_received: int  0 0 0 0 0 0 0 0 0 0 ...
 ##  $ www_likes            : int  0 0 0 0 0 0 0 0 0 0 ...
 ##  $ www_likes_received   : int  0 0 0 0 0 0 0 0 0 0 ...
+```
+
+```r
+head(pseudo_facebook)
 ```
 
 ```
@@ -66,11 +85,16 @@ Visualize data set structure and sample
 
 Friend counts histogram faceted by gender
 
-```
-## Warning: Removed 2949 rows containing non-finite values (stat_bin).
+```r
+qplot(x = friend_count, data = subset(pseudo_facebook, !is.na(gender)), binwidth = 25
+      , color = I('black'), fill = I('blue')) +
+  xlab("Number of friends") +
+  ylab("Number of users") +
+  scale_x_continuous(limits = c(0, 1000), breaks = seq(0, 1000, 100)) +
+  facet_wrap(~gender)
 ```
 
-![](One_Variable_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+![](One_Variable_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 Friend count statistics by gender
 
@@ -88,60 +112,74 @@ by(pseudo_facebook$friend_count, pseudo_facebook$gender, summary)
 ##       0      27      74     165     182    4917
 ```
 
-Tenure histogram in years
 
+```r
+qplot(x = (tenure/365), data = pseudo_facebook, binwidth = .25 
+      , color = I('black'), fill = I('blue')) +
+  xlab("Number of years using facebook") +
+  ylab("Number of users") +
+  scale_x_continuous(breaks = seq(1, 7, 1), limits = c(0, 7)) +
+  ggtitle("Tenure histogram in years")
 ```
-## Warning: Removed 26 rows containing non-finite values (stat_bin).
-```
 
-![](One_Variable_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
-
-User's age histogram
 ![](One_Variable_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
-Three different friend's count histograms: 1) Count, 2) Base 10 log transformation of count, and 3) Square root transformation of count 
 
-```
-## Warning: Removed 628 rows containing non-finite values (stat_bin).
-
-## Warning: Removed 628 rows containing non-finite values (stat_bin).
-```
-
-```
-## Warning: Removed 1 rows containing missing values (geom_bar).
-```
-
-```
-## Warning: Removed 628 rows containing non-finite values (stat_bin).
-```
-
-```
-## Warning: Removed 1 rows containing missing values (geom_bar).
+```r
+qplot(x=age, data=pseudo_facebook, binwidth=1
+      , color = I('black'), fill = I('blue')) +
+  xlab("User's age") +
+  ylab("Number of users") +
+  scale_x_continuous(breaks=seq(0, 150, 5)) +
+  scale_y_continuous(breaks=seq(0, 6000, 500)) +
+  ggtitle("User's age histogram")
 ```
 
 ![](One_Variable_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
-Frequency polygons of number of likes by gender
+Three different friend's count histograms: 1) Count, 2) Base 10 log transformation of count, and 3) Square root transformation of count 
 
-```
-## Warning: Transformation introduced infinite values in continuous x-axis
-```
+```r
+fc <- qplot(x = friend_count, data = pseudo_facebook, binwidth=25
+            , color = I('black'), fill = I('blue')) +
+  xlab('Number of friends') +
+  ylab('Number of users') +
+  scale_x_continuous(breaks=seq(0, 5000, 100), limits=c(0, 2500))
 
-```
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-```
+fc_log10 <- qplot(x = friend_count+1, data = pseudo_facebook, binwidth=.05
+                  , color = I('black'), fill = I('blue')) +
+  xlab('Number of friends (Base 10 logarithm transformation)') +
+  ylab('Number of users') +
+  scale_x_log10(breaks=seq(0, 2500, 300), limits=c(1, 2500))
 
-```
-## Warning: Removed 60935 rows containing non-finite values (stat_bin).
-```
+fc_sqrt <- qplot(x = friend_count, data = pseudo_facebook, binwidth=.75
+                  , color = I('black'), fill = I('blue')) +
+  xlab('Number of friends (Square root transformation)') +
+  ylab('Number of users') +
+  scale_x_sqrt(breaks=seq(0, 5000, 100), limits=c(0, 2500))
 
-```
-## Warning: Removed 4 rows containing missing values (geom_path).
+grid.arrange(fc, fc_log10, fc_sqrt, nrow = 3)
 ```
 
 ![](One_Variable_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
+Frequency polygons of number of likes by gender
+
+```r
+qplot(x = www_likes, y = ..count../sum(..count..), data = subset(pseudo_facebook, !is.na(gender))
+      , geom = 'freqpoly', color = gender
+      , xlab = 'Likes Count'
+      , ylab = 'Number of Friends') + 
+  scale_x_log10(breaks=seq(0,15000,1000), limits=c(1, 15000))
+```
+
+![](One_Variable_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
 What's the males like count and who has more likes, males or females?
+
+```r
+by(pseudo_facebook$www_likes, pseudo_facebook$gender, sum)
+```
 
 ```
 ## pseudo_facebook$gender: female
@@ -153,8 +191,20 @@ What's the males like count and who has more likes, males or females?
 
 Who has more friends, males or females?
 Boxplot of friend count by gender
-![](One_Variable_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+```r
+qplot(x = gender, y = friend_count,data = subset(pseudo_facebook, !is.na(gender))
+      , geom = 'boxplot') +
+  coord_cartesian(ylim=c(0, 1000))
+```
+
+![](One_Variable_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 Numerical summary of friend count by gender
+
+```r
+by(pseudo_facebook$friend_count, pseudo_facebook$gender, summary)
+```
 
 ```
 ## pseudo_facebook$gender: female
@@ -168,8 +218,21 @@ Numerical summary of friend count by gender
 
 Who initiated more friendships, males or females?
 Boxplot of friendships initiated by gender
-![](One_Variable_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+
+```r
+qplot(x = gender, y = friendships_initiated
+      , data = subset(pseudo_facebook, !is.na(gender))
+      , geom = 'boxplot') +
+  coord_cartesian(ylim = c(0:150))
+```
+
+![](One_Variable_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
 Numerical summary of friendships initiated by gender
+
+```r
+by(pseudo_facebook$friendships_initiated, pseudo_facebook$gender, summary)
+```
 
 ```
 ## pseudo_facebook$gender: female
@@ -194,6 +257,10 @@ summary(pseudo_facebook$mobile_check_in)
 ## 35056 63947
 ```
 What percentage of users check in using mobile?
+
+```r
+sum(pseudo_facebook$mobile_check_in == 1)/length(pseudo_facebook$mobile_check_in)
+```
 
 ```
 ## [1] 0.6459097

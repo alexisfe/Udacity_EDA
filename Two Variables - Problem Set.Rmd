@@ -1,15 +1,22 @@
 ---
 title: "Two Variables - Problem Set"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 Import necessary libraries and data sets
-```{r, echo=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(ggplot2)
 library(gridExtra)
 library(dplyr) 
 library(tidyr)
 data(diamonds)
+```
+
+Setting seed for reproducibility
+```{r}
+set.seed(1234)
 ```
 
 Scatterplot of price vs. x
